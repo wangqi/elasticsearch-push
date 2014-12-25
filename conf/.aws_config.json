@@ -1,0 +1,8 @@
+{
+    	"aws_accesskey": "KYQPtikYgtK64ml7KX6ceH++P0zg5AQu1/2dU+cm",
+	"aws_keyid": "AKIAJX6IT2H43I5FWIZA",
+	"aws_topic_arn": "arn:aws:sns:ap-northeast-1:600451652420:app/GCM/battleship-android-jp",
+	"aws_region":    "ap-northeast-1",
+	"debug": "true"
+}
+
