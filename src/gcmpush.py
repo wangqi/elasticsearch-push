@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3.3 
 # -*- coding: utf8 -*-
-import sys, traceback
+
+import sys, traceback, codecs
 from urllib.parse import urlparse
 from imp import reload
 from time import strftime, gmtime, time
@@ -48,7 +49,7 @@ def publish(conn, subject, endpoint, msg, rolename, token, var):
 	if var != None:
 		#msg = msg.format( rolename, tuple(var) )
 		msg = msg.format( rolename )
-	with open('gcmresult.log', 'a') as logfile:
+	with open('gcmresult.log', 'a', encoding='utf-8') as logfile:
 		timestr = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 		try:
 			result =  conn.publish(message=msg,
@@ -82,7 +83,7 @@ def publish(conn, subject, endpoint, msg, rolename, token, var):
 ##################################################################
 def read_user(userfile):
 	users = dict()
-	for row in csv.reader(open(userfile, 'rU'), delimiter=','):
+	for row in csv.reader(open(userfile, 'rU', encoding="utf-8"), delimiter=','):
 		if len(row) < 2:
 			continue
 		if row[0].startswith('#'):
@@ -194,7 +195,7 @@ if __name__ == "__main__":
 	
 	boto.set_stream_logger('push')
 
-	with open(messagefile, 'r') as msgfile:
+	with codecs.open(messagefile, 'r', 'utf-8') as msgfile:
 		msgconfig = json.load(msgfile)
 	title = msgconfig.get('title')
 	message = msgconfig.get('message')
