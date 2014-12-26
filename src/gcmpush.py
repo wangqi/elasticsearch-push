@@ -66,10 +66,10 @@ def publish(conn, subject, endpoint, msg, rolename, token, var):
 				else:
 					print('fail, {}, {}, {}, {}'.format(timestr, rolename, token, messageId), file=logfile)
 			else:
-				print('fail, {}, {}, {}, {}'.format(timestr, rolename, token, messageId), file=logfile)
+				print('fail, {}, {}, {}, {}'.format(timestr, rolename, token, ''), file=logfile)
 		except Exception as err:
 			print('failed to send to endpoint:{}', endpoint)
-			print('fail, {}, {}, {}, {}'.format(timestr, rolename, token, messageId), file=logfile)
+			print('fail, {}, {}, {}, {}'.format(timestr, rolename, token, ''), file=logfile)
 			traceback.print_exc(file=sys.stdout)
 
 ##################################################################
