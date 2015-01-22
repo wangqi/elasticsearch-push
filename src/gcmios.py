@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3.3 
 # -*- coding: utf8 -*-
 
-import sys, traceback, codecs, re
+import sys, traceback, codecs
 from urllib.parse import urlparse
 from imp import reload
 from time import strftime, gmtime, time
@@ -29,48 +29,32 @@ def connect_sns(region, aws_keyid, aws_accesskey, debug):
 
 ##################################################################
 #
-# Get an endpoint before publishing
-#
-##################################################################
-def get_endpoint(conn, app_arn):
-	try:
-		endpoint = conn.get_endpoint_attributes(app_arn)
-		return endpoint
-	except:
-		print("Failed to get endpoint for app_arn: " + app_arn )
-	return None
-
-##################################################################
-#
 # Add an endpoint before publishing
 #
 ##################################################################
 def add_endpoint(conn, app_arn, token, uid):
 	try:
 		endpoint = conn.create_platform_endpoint(platform_application_arn=app_arn, token=token, custom_user_data=uid)
-		target_arn = endpoint['CreatePlatformEndpointResponse']['CreatePlatformEndpointResult']['EndpointArn']
-		#print(target_arn)
-		return target_arn
-	except Exception as err:
-		result = re.search('Endpoint (.*) already', err.message)
-		target_arn = result.group(1)
-		print("Endpoint already exists: " + target_arn)
-		return target_arn
+		#print(endpoint)
+		return endpoint
+	except:
+		print("Failed to add endpoint for uid: " + uid)
 
 ##################################################################
 # 
 # Publish a single message to an endpoint.
 #
 ##################################################################
-def publish(conn, subject, target_arn, msg, rolename, token, var):
+def publish(conn, subject, endpoint, msg, rolename, token, var):
 	if var != None:
 		#msg = msg.format( rolename, tuple(var) )
 		msg = msg.format( rolename )
-	with open('gcmresult.log', 'a', encoding='utf-8') as logfile:
+	with open('gcmresult_ios.log', 'a', encoding='utf-8') as logfile:
 		timestr = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 		try:
 			result =  conn.publish(message=msg,
-			target_arn=target_arn, message_structure='json')
+			target_arn=endpoint['CreatePlatformEndpointResponse']['CreatePlatformEndpointResult']['EndpointArn']
+			, message_structure='json')
 			#print('===========================================')
 			#print(timestr)
 			response = result.get('PublishResponse')
@@ -100,16 +84,12 @@ def publish(conn, subject, target_arn, msg, rolename, token, var):
 def read_user(userfile):
 	users = dict()
 	for row in csv.reader(open(userfile, 'rU', encoding="utf-8"), delimiter=','):
+		if len(row) < 2:
+			continue
 		if row[0].startswith('#'):
 			continue
-		rolename = None
-		token = None
-		if len(row) >= 2:
-			rolename = row[0]
-			token = row[1]
-		else:
-			token = row[0]
-			rolename = token
+		rolename = row[0]
+		token = row[1]
 		variables=list()
 		if len(row)>2:
 			variables=row[2:]
@@ -222,7 +202,7 @@ if __name__ == "__main__":
 	print('title:\t%s'%title)
 	print('message:\t%s'%message)
 	
-	message = u'{{"GCM":"{{\\"data\\":{{\\"default\\":\\"%s\\", \\"title\\":\\"%s\\"}}}}"}}' % (message,title)
+	message = u'{{"APNS_SANDBOX":"{{\\"aps\\":{{\\"alert\\":\\"%s\\"}}}}"}}' % (message)
 	if readFromFile:
 		users = read_user(userfile)
 	else:
@@ -235,9 +215,9 @@ if __name__ == "__main__":
 		rolename = userdict.get('rolename')
 		var = userdict.get('var')
 		print('token={0},rolename={1}'.format(token,rolename))
-		target_arn = add_endpoint(conn, aws_topic_arn, token, rolename)
+		endpoint = add_endpoint(conn, aws_topic_arn, token, rolename)
 		try:
-			publish(conn, 'Subject', target_arn, message, rolename, token, var)
+			publish(conn, 'Subject', endpoint, message, rolename, token, var)
 		except Exception as err:
 			print('publish error')
 		line+=1
